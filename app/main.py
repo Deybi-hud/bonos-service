@@ -58,9 +58,19 @@ class ReclamarRequest(BaseModel):
 #   - readiness: ¿está listo para recibir tráfico? Debe verificar la BD.
 # Luego configurar livenessProbe/readinessProbe en el Deployment de EKS.
 
-@app.get("/health")
-def health():
-    return {"status": "ok", "service": "orders-services"}
+@app.get("/livez")
+def liveness():
+    return {"status": "ok"}
+
+@app.get("/readyz")
+def readiness():
+    try:
+        with conexion() as conn:
+            with conn.cursor() as cur:
+                cur.execute("SELECT 1")
+        return {"status": "ready"}
+    except Exception:
+        return JSONResponse(status_code=503, content{"status": "unavailable"})
 
 @app.get("/api/bonos")
 def listar_bonos():
